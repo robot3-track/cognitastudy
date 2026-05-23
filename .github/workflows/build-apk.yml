@@ -6,13 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          # Cache removed here to prevent the missing lockfile error
 
       - name: Build Web Project
         run: |
@@ -22,7 +22,7 @@ jobs:
       - name: Install Capacitor & Create Android Platform
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap add android 
+          npx cap add android
           npx cap sync android
 
       - name: Set up JDK 21
@@ -36,7 +36,6 @@ jobs:
         run: |
           # Use a block append to ensure the syntax is valid inside the gradle file
           cat <<EOT >> android/app/build.gradle
-
           configurations.all {
               resolutionStrategy {
                   force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
@@ -57,4 +56,3 @@ jobs:
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          
