@@ -1,0 +1,60 @@
+name: Build Android APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Build Web Project
+        run: |
+          npm install
+          npm run build
+
+      - name: Install Capacitor & Create Android Platform
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap add android 
+          npx cap sync android
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Fix Kotlin Duplicate Class Error
+        run: |
+          # Use a block append to ensure the syntax is valid inside the gradle file
+          cat <<EOT >> android/app/build.gradle
+
+          configurations.all {
+              resolutionStrategy {
+                  force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
+                  force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10'
+                  force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10'
+              }
+          }
+          EOT
+
+      - name: Build APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload Finished APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          
