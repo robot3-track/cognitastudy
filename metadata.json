@@ -1,0 +1,6 @@
+{
+  "name": "Cognita Study",
+  "description": "An AI-powered study companion to effortlessly create flashcards, practice tests, and quizzes from study materials with AI-generated audio summaries.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
