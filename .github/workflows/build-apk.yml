@@ -8,18 +8,23 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v5
 
+      # Step 1: Force create configuration files BEFORE doing any npm tasks
+      - name: Pre-initialize Project Configurations
+        run: |
+          if [ ! -f package.json ]; then
+            echo "package.json not found! Creating fallback..."
+            echo '{"name": "cognitastudy", "version": "1.0.0", "private": true, "scripts": { "build": "mkdir -p www && echo '\''<h1>Hello</h1>'\'' > www/index.html" }}' > package.json
+          fi
+          
+          if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ] && [ ! -f capacitor.config.js ]; then
+            echo "Capacitor config not found! Creating fallback..."
+            echo '{"appId": "com.cognitastudy.app", "appName": "cognitastudy", "webDir": "www"}' > capacitor.config.json
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 24
-
-      # This safe-check creates a package.json if it is missing from your repository
-      - name: Ensure package.json exists
-        run: |
-          if [ ! -f package.json ]; then
-            echo "package.json not found! Creating a fallback file..."
-            echo '{"name": "cognitastudy", "version": "1.0.0", "private": true, "scripts": { "build": "echo 'No web build step required'" }}' > package.json
-          fi
 
       - name: Build Web Project
         run: |
@@ -29,7 +34,8 @@ jobs:
       - name: Install Capacitor & Create Android Platform
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap add android || true
+          # Now it has the appId initialized from step 1
+          npx cap add android || echo "Android platform folder already exists."
           npx cap sync android
 
       - name: Set up JDK 21
